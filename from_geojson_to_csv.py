@@ -2,6 +2,7 @@ import numpy as np
 import json
 import rasterio as rio
 import pandas
+
 """ Global Variables """
 img_left_bounds = 0  # Left boundary of image in geo coordinates
 img_right_bounds = 0  # Right boundary of image in geo coordinates
@@ -11,7 +12,10 @@ px_per_m = 0  # Number of pixels per metre of geo-coordinates
 for_csv = []  # The list of list for bounding boxes in image
 
 
-""" Handles all methods """
+""" 
+Main entry point
+Handles all methods 
+"""
 def here_we_go(geojson_file, img_filename, new_csv_name):
     poss_uuid, tree_annot = get_valid_uuid(geojson_file, img_filename)
     print("Length of poss_uuid list is: ", len(poss_uuid)) # Error checking
@@ -29,7 +33,8 @@ def here_we_go(geojson_file, img_filename, new_csv_name):
 
 
 """ 
-Gets a list of uuid's from the geojson file whose bounding boxes geo-coords are within those of the image 
+Gets a list of uuid's from the geojson file whose bounding boxes geo-coords 
+    are within those of the image 
 """
 def get_valid_uuid(geo_json_file, img_file):
     # Open the GeoJSON file and load it with JSON
@@ -40,13 +45,14 @@ def get_valid_uuid(geo_json_file, img_file):
     poss_uuid_list = []  # Empty list to put in uuid numbers of possible bounding boxes in image
 
     # Calculate image coords
-    calc_px_per(img_file)  # "shouldbeworking2.tif"
+    calc_px_per(img_file)
 
     # Check the first x-y coordinate of each uuid to see if it is within bounds
     for i in tree_annotations["features"]:  # Check each bounding box
         uuid_num = i["properties"]["uuid"]  # Stores the uuid of the current bounding box object we are in
         # Holds all the arrays of each vertex in the current bounding box
         coords_array = np.array(i["geometry"]["coordinates"])
+
         if len(coords_array) > 0:  # Make sure the coordinates arrays are not empty
             current_bbox = coords_array[0][0][0]  # First vertex of the current bounding box
 
@@ -60,14 +66,11 @@ def get_valid_uuid(geo_json_file, img_file):
 
 
 """
-Calculates boundaries of image (both pixels and geo-coordinates) and pixels per metre
+Calculates image width and height in both pixels and geo-coordinates 
+Also calculates pixels per metre
 """
 # TODO
 def calc_px_per(img_file):
-    # global img_left_bounds
-    # global img_right_bounds
-    # global img_top_bounds
-    # global img_bottom_bounds
     global px_per_m
 
     # Update the global vars with the Geolocation boundaries of image
@@ -79,12 +82,6 @@ def calc_px_per(img_file):
     img_width_px = the_image.width
     img_height_px = the_image.height  # todo: Why is 'img_height_px' not used?
 
-    # Geolocation boundaries of image
-    # img_left_bounds = the_image.bounds.left
-    # img_right_bounds = the_image.bounds.right
-    # img_top_bounds = the_image.bounds.top
-    # img_bottom_bounds = the_image.bounds.bottom
-
     # Width and Height of image in geo-coord metres
     x_coords_span = img_right_bounds - img_left_bounds
     y_coords_span = img_top_bounds - img_bottom_bounds  # todo: Why is 'y_coords_span' not used?
@@ -93,6 +90,9 @@ def calc_px_per(img_file):
     px_per_m = img_width_px / x_coords_span
 
 
+"""
+Calculates the geolocation boundaries of the image & updates global vars
+"""
 def calc_geo_coords_boundaries(img_file):
     global img_left_bounds
     global img_right_bounds
@@ -172,17 +172,15 @@ def calc_img_px_coords():
 """
 Adds column headers and data from for_csv to a pandas dataframe then saves it as a csv file
 """
-# TODO
 def create_csv(csv_name):
-    # TODO: How to delete the first column, the one with the index from 0? Do this after file is created?
     # Column headers to be in csv file
     columns = ["image_path", "xmin", "ymin", "xmax", "ymax", "label"]
     # Everything to be included in csv
     not_index_list = [i for i in for_csv]
     # Create pandas dataframe
     pd = pandas.DataFrame(not_index_list, columns=columns)
-    # Create csv with column headers and index
-    pd.to_csv(csv_name, index=False)  # "bounding.csv"
+    # Create csv with column headers and no index
+    pd.to_csv(csv_name, index=False)
 
 
 """
