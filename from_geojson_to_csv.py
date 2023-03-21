@@ -172,9 +172,7 @@ def calc_img_px_coords():
 """
 Adds column headers and data from for_csv to a pandas dataframe then saves it as a csv file
 """
-# TODO
 def create_csv(csv_name):
-    # TODO: How to delete the first column, the one with the index from 0? Do this after file is created?
     # Column headers to be in csv file
     columns = ["image_path", "xmin", "ymin", "xmax", "ymax", "label"]
     # Everything to be included in csv
@@ -192,4 +190,24 @@ Returns geocoordinates for top-left corner of image
 def get_top_left_geo_coords(img_file):
     calc_geo_coords_boundaries(img_file)
     return img_left_bounds, img_top_bounds
+
+
+"""
+Calculates and returns the geo-coordinates of the image boundaries 
+"""
+def get_geo_coords_boundaries(img_file):
+    calc_geo_coords_boundaries(img_file)
+    return img_left_bounds, img_right_bounds, img_top_bounds, img_bottom_bounds
+
+
+# TODO: Finish this
+def check_bboxes_vs_img_geocoords(img_csv, img_file):
+    # First get the min-max geo-coords of image
+
+    # Then read each line of csv file and check that the min-max of each axis is within bounds
+
+    # If everything is fine, return True
+    # Otherwise, return False
+    stuff = ""
+    return stuff
 
