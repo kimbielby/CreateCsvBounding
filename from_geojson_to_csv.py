@@ -191,3 +191,23 @@ def get_top_left_geo_coords(img_file):
     calc_geo_coords_boundaries(img_file)
     return img_left_bounds, img_top_bounds
 
+
+"""
+Calculates and returns the geo-coordinates of the image boundaries 
+"""
+def get_geo_coords_boundaries(img_file):
+    calc_geo_coords_boundaries(img_file)
+    return img_left_bounds, img_right_bounds, img_top_bounds, img_bottom_bounds
+
+
+# TODO: Finish this
+def check_bboxes_vs_img_geocoords(img_csv, img_file):
+    # First get the min-max geo-coords of image
+
+    # Then read each line of csv file and check that the min-max of each axis is within bounds
+
+    # If everything is fine, return True
+    # Otherwise, return False
+    stuff = ""
+    return stuff
+
