@@ -11,14 +11,15 @@ img_bottom_bounds = 0  # Bottom boundary of image in geo coordinates
 px_per_m = 0  # Number of pixels per metre of geo-coordinates
 for_csv = []  # The list of list for bounding boxes in image
 
-
 """ 
 Main entry point
 Handles all methods 
 """
+
+
 def here_we_go(geojson_file, img_filename, new_csv_name):
     poss_uuid, tree_annot = get_valid_uuid(geojson_file, img_filename)
-    print("Length of poss_uuid list is: ", len(poss_uuid)) # Error checking
+    print("Length of poss_uuid list is: ", len(poss_uuid))  # Error checking
     full_coords_list = get_uuid_coords(poss_uuid, tree_annot)  # Get full geo-coordinates for possible uuid's
     print("Length of full_coords_list is: ", len(full_coords_list))  # Error checking
     lists_for_csv(img_filename, full_coords_list)
@@ -36,6 +37,8 @@ def here_we_go(geojson_file, img_filename, new_csv_name):
 Gets a list of uuid's from the geojson file whose bounding boxes geo-coords 
     are within those of the image 
 """
+
+
 def get_valid_uuid(geo_json_file, img_file):
     # Open the GeoJSON file and load it with JSON
     geo_j_file = open(geo_json_file)
@@ -69,6 +72,8 @@ def get_valid_uuid(geo_json_file, img_file):
 Calculates image width and height in both pixels and geo-coordinates 
 Also calculates pixels per metre
 """
+
+
 # TODO
 def calc_px_per(img_file):
     global px_per_m
@@ -93,6 +98,8 @@ def calc_px_per(img_file):
 """
 Calculates the geolocation boundaries of the image & updates global vars
 """
+
+
 def calc_geo_coords_boundaries(img_file):
     global img_left_bounds
     global img_right_bounds
@@ -112,6 +119,8 @@ def calc_geo_coords_boundaries(img_file):
 """
 Gets geo-coordinates for each uuid on poss_uuid_list and stores them in 2D List
 """
+
+
 def get_uuid_coords(uuid_list, annot_file):
     # Go through geojson and get coordinates for each uuid on poss_uuid_list
     full_coords_list = []
@@ -131,6 +140,8 @@ From full_coords_list puts certain coordinates into a separate 2D list as:
     ymax
     label (e.g. 'tree')
 """
+
+
 def lists_for_csv(img_name, coord_list):
     # Take certain coords from full_coords_list and put them into a separate list with the following pattern:
     # image_path (name of image); xmin; ymin; xmax; ymax; label (e.g. 'Tree')
@@ -153,6 +164,8 @@ def lists_for_csv(img_name, coord_list):
 """ 
 Calculates the image's pixel min-max for bounding box and replaces their geo-coordinate equivalent in for_csv List 
 """
+
+
 def calc_img_px_coords():
     global for_csv
     # Calculate image pixel min-max for bounding box and replace their geo-coordinate equivalent in for_csv List
@@ -173,6 +186,8 @@ def calc_img_px_coords():
 """
 Adds column headers and data from for_csv to a pandas dataframe then saves it as a csv file
 """
+
+
 def create_csv(csv_name):
     # Column headers to be in csv file
     columns = ["image_path", "xmin", "ymin", "xmax", "ymax", "label"]
@@ -188,6 +203,8 @@ def create_csv(csv_name):
 Calls function to update the global geocoordinates vars of image
 Returns geocoordinates for top-left corner of image 
 """
+
+
 def get_top_left_geo_coords(img_file):
     calc_geo_coords_boundaries(img_file)
     return img_left_bounds, img_top_bounds
@@ -196,6 +213,8 @@ def get_top_left_geo_coords(img_file):
 """
 Calculates and returns the geo-coordinates of the image boundaries 
 """
+
+
 def get_geo_coords_boundaries(img_file):
     calc_geo_coords_boundaries(img_file)
     return img_left_bounds, img_right_bounds, img_top_bounds, img_bottom_bounds
@@ -203,17 +222,30 @@ def get_geo_coords_boundaries(img_file):
 
 # TODO: Finish this
 def check_bboxes_vs_img_geocoords(img_csv, img_file):
+    is_all_good = False
+
     # First get the min-max geo-coords of image
     calc_geo_coords_boundaries(img_file)
 
-    # Then read each line of csv file and check that the min-max of each axis is within bounds
+    # Read the image csv file into a Pandas dataframe
     df = pandas.read_csv(img_csv)
-    
-            #  Is given as a list of strings (except for the floats)
-                # Compare positions 1 through 4 to x-min etc
 
-    # If everything is fine, return True
-    # Otherwise, return False
-    stuff = ""
-    return stuff
+    # Then read each line of csv file and check that the min-max of each axis is within bounds
+    for index, row in df.iterrows():
+        if row["xmin"] > img_left_bounds and row["ymin"] > img_bottom_bounds \
+                and row["xmax"] < img_right_bounds and row["ymax"] < img_top_bounds:
+            # If geo-coordinates of bounding box is within geo-coordinate boundaries of image
+            # Set boolean to True
+            is_all_good = True
+        else:
+            # If geo-coordinates of bounding box is not within geo-coordinate boundaries of image
+            # Set boolean to False
+            is_all_good = False
+            # Return boolean as False
+            return is_all_good
 
+    # If code exits for loop with all bounding boxes within boundaries
+    # Return boolean which should be set to True
+    return is_all_good
+
+    # xmin, ymin, xmax, ymax
