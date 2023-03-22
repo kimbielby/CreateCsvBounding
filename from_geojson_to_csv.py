@@ -121,6 +121,7 @@ def get_uuid_coords(uuid_list, annot_file):
                 full_coords_list.append(j["geometry"]["coordinates"])
     return full_coords_list
 
+
 """
 From full_coords_list puts certain coordinates into a separate 2D list as:
     image_path (name of the image)
@@ -132,9 +133,9 @@ From full_coords_list puts certain coordinates into a separate 2D list as:
 """
 def lists_for_csv(img_name, coord_list):
     # Take certain coords from full_coords_list and put them into a separate list with the following pattern:
-    # image_path (name of image); xmin; ymin; xmax; ymax; label (e.g. 'tree')
+    # image_path (name of image); xmin; ymin; xmax; ymax; label (e.g. 'Tree')
     global for_csv  # The list of lists for bounding boxes in image
-    label = "tree"
+    label = "Tree"
 
     for i in coord_list:
         # Get mins and maxs of bounding box
@@ -203,8 +204,13 @@ def get_geo_coords_boundaries(img_file):
 # TODO: Finish this
 def check_bboxes_vs_img_geocoords(img_csv, img_file):
     # First get the min-max geo-coords of image
+    calc_geo_coords_boundaries(img_file)
 
     # Then read each line of csv file and check that the min-max of each axis is within bounds
+    df = pandas.read_csv(img_csv)
+    
+            #  Is given as a list of strings (except for the floats)
+                # Compare positions 1 through 4 to x-min etc
 
     # If everything is fine, return True
     # Otherwise, return False
