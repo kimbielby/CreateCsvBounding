@@ -220,7 +220,7 @@ def get_geo_coords_boundaries(img_file):
     return img_left_bounds, img_right_bounds, img_top_bounds, img_bottom_bounds
 
 
-# TODO: Finish this
+# TODO
 def check_bboxes_vs_img_geocoords(img_csv, img_file):
     is_all_good = False
 
@@ -241,6 +241,8 @@ def check_bboxes_vs_img_geocoords(img_csv, img_file):
             # If geo-coordinates of bounding box is not within geo-coordinate boundaries of image
             # Set boolean to False
             is_all_good = False
+            # TODO: Return a String of the coordinates that are outwith bounds,
+            #   the bounds they are outwith, and which line in csv it is
             # Return boolean as False
             return is_all_good
 
