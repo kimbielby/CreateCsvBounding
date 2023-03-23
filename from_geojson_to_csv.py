@@ -19,13 +19,13 @@ Handles all methods
 
 def here_we_go(geojson_file, img_filename, new_csv_name):
     poss_uuid, tree_annot = get_valid_uuid(geojson_file, img_filename)
-    print("Length of poss_uuid list is: ", len(poss_uuid))  # Error checking
+    # print("Length of poss_uuid list is: ", len(poss_uuid))  # Error checking
     full_coords_list = get_uuid_coords(poss_uuid, tree_annot)  # Get full geo-coordinates for possible uuid's
-    print("Length of full_coords_list is: ", len(full_coords_list))  # Error checking
+    # print("Length of full_coords_list is: ", len(full_coords_list))  # Error checking
     lists_for_csv(img_filename, full_coords_list)
-    print("Length of for_csv is: ", len(for_csv))  # Error checking
+    # print("Length of for_csv is: ", len(for_csv))  # Error checking
     calc_img_px_coords()
-    print("Length of for_csv is: ", len(for_csv))  # Error checking
+    # print("Length of for_csv is: ", len(for_csv))  # Error checking
     create_csv(new_csv_name)
 
 
@@ -37,8 +37,6 @@ def here_we_go(geojson_file, img_filename, new_csv_name):
 Gets a list of uuid's from the geojson file whose bounding boxes geo-coords 
     are within those of the image 
 """
-
-
 def get_valid_uuid(geo_json_file, img_file):
     # Open the GeoJSON file and load it with JSON
     geo_j_file = open(geo_json_file)
@@ -221,33 +219,22 @@ def get_geo_coords_boundaries(img_file):
 
 
 # TODO
-def check_bboxes_vs_img_geocoords(img_csv, img_file):
-    is_all_good = False
+def check_bboxes_vs_img_geocoords(geo_bbox_list, img_xmin, img_xmax, img_ymin, img_ymax):
 
-    # First get the min-max geo-coords of image
-    calc_geo_coords_boundaries(img_file)
+    # First go through geo_bbox_list to compare max and min - Turn to numpy array?
+    for i in geo_bbox_list:
+        bbox_xmin = i[1]
+        bbox_ymin = i[2]
+        bbox_xmax = i[3]
+        bbox_ymax = i[4]
 
-    # Read the image csv file into a Pandas dataframe
-    df = pandas.read_csv(img_csv)
+        if bbox_xmin < img_xmin and bbox_ymin < img_ymin and bbox_xmax > img_xmax and bbox_ymax > img_ymax:
+            response = ["This bbox is outwith bounds: ", bbox_xmin, bbox_ymin, bbox_xmax, bbox_ymax]
+            return response
 
-    # Then read each line of csv file and check that the min-max of each axis is within bounds
-    for index, row in df.iterrows():
-        if row["xmin"] > img_left_bounds and row["ymin"] > img_bottom_bounds \
-                and row["xmax"] < img_right_bounds and row["ymax"] < img_top_bounds:
-            # If geo-coordinates of bounding box is within geo-coordinate boundaries of image
-            # Set boolean to True
-            is_all_good = True
-        else:
-            # If geo-coordinates of bounding box is not within geo-coordinate boundaries of image
-            # Set boolean to False
-            is_all_good = False
-            # TODO: Return a String of the coordinates that are outwith bounds,
-            #   the bounds they are outwith, and which line in csv it is
-            # Return boolean as False
-            return is_all_good
-
-    # If code exits for loop with all bounding boxes within boundaries
-    # Return boolean which should be set to True
-    return is_all_good
-
+    return "All within bounds"
     # xmin, ymin, xmax, ymax
+
+
+def get_contents_of_list_for_csv():
+    return for_csv
