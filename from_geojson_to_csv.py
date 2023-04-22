@@ -15,8 +15,6 @@ for_csv = []  # The list of list for bounding boxes in image
 Main entry point
 Handles all methods 
 """
-
-
 def here_we_go(geojson_file, img_filename, new_csv_name):
     poss_uuid, tree_annot = get_valid_uuid(geojson_file, img_filename)
     # print("Length of poss_uuid list is: ", len(poss_uuid))  # Error checking
@@ -70,8 +68,6 @@ def get_valid_uuid(geo_json_file, img_file):
 Calculates image width and height in both pixels and geo-coordinates 
 Also calculates pixels per metre
 """
-
-
 # TODO
 def calc_px_per(img_file):
     global px_per_m
@@ -96,8 +92,6 @@ def calc_px_per(img_file):
 """
 Calculates the geolocation boundaries of the image & updates global vars
 """
-
-
 def calc_geo_coords_boundaries(img_file):
     global img_left_bounds
     global img_right_bounds
@@ -117,8 +111,6 @@ def calc_geo_coords_boundaries(img_file):
 """
 Gets geo-coordinates for each uuid on poss_uuid_list and stores them in 2D List
 """
-
-
 def get_uuid_coords(uuid_list, annot_file):
     # Go through geojson and get coordinates for each uuid on poss_uuid_list
     full_coords_list = []
@@ -138,8 +130,6 @@ From full_coords_list puts certain coordinates into a separate 2D list as:
     ymax
     label (e.g. 'tree')
 """
-
-
 def lists_for_csv(img_name, coord_list):
     # Take certain coords from full_coords_list and put them into a separate list with the following pattern:
     # image_path (name of image); xmin; ymin; xmax; ymax; label (e.g. 'Tree')
@@ -162,8 +152,6 @@ def lists_for_csv(img_name, coord_list):
 """ 
 Calculates the image's pixel min-max for bounding box and replaces their geo-coordinate equivalent in for_csv List 
 """
-
-
 def calc_img_px_coords():
     global for_csv
     # Calculate image pixel min-max for bounding box and replace their geo-coordinate equivalent in for_csv List
@@ -184,8 +172,6 @@ def calc_img_px_coords():
 """
 Adds column headers and data from for_csv to a pandas dataframe then saves it as a csv file
 """
-
-
 def create_csv(csv_name):
     # Column headers to be in csv file
     columns = ["image_path", "xmin", "ymin", "xmax", "ymax", "label"]
@@ -201,8 +187,6 @@ def create_csv(csv_name):
 Calls function to update the global geocoordinates vars of image
 Returns geocoordinates for top-left corner of image 
 """
-
-
 def get_top_left_geo_coords(img_file):
     calc_geo_coords_boundaries(img_file)
     return img_left_bounds, img_top_bounds
@@ -211,8 +195,6 @@ def get_top_left_geo_coords(img_file):
 """
 Calculates and returns the geo-coordinates of the image boundaries 
 """
-
-
 def get_geo_coords_boundaries(img_file):
     calc_geo_coords_boundaries(img_file)
     return img_left_bounds, img_right_bounds, img_top_bounds, img_bottom_bounds
