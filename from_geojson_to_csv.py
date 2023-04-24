@@ -155,7 +155,7 @@ def calc_img_px_coords():
         # The xmin in pixels: geo-coords of left edge of bounding box minus geo-coords of left edge of image
         # Multiplied by pixels per metre to turn geo-coord difference into pixel difference
 
-        # REMEMBER: image pixel coordinates start top-left, NOT bottom-right
+        # REMEMBER: image pixel coordinates start top-left, NOT bottom-left
         px_xmin = (for_csv[i][1] - img_left_bounds) * px_per_m
         px_ymin = (img_top_bounds - for_csv[i][4]) * px_per_m
         px_xmax = (img_right_bounds - for_csv[i][3]) * px_per_m
