@@ -17,18 +17,14 @@ Handles all methods
 """
 def here_we_go(geojson_file, img_filename, new_csv_name):
     poss_uuid, tree_annot = get_valid_uuid(geojson_file, img_filename)
-    # print("Length of poss_uuid list is: ", len(poss_uuid))  # Error checking
     full_coords_list = get_uuid_coords(poss_uuid, tree_annot)  # Get full geo-coordinates for possible uuid's
-    # print("Length of full_coords_list is: ", len(full_coords_list))  # Error checking
     lists_for_csv(img_filename, full_coords_list)
-    # print("Length of for_csv is: ", len(for_csv))  # Error checking
     calc_img_px_coords()
-    # print("Length of for_csv is: ", len(for_csv))  # Error checking
     create_csv(new_csv_name)
 
 
-# TODO: SHOULD I BE COPYING FILES FIRST BEFORE DOING STUFF WITH THEM
-#   - LIKE GABRIELA WAS SAYING IN AI MODULE?
+# TODO: COPY FILES FIRST BEFORE DOING STUFF WITH THEM
+#   - LIKE GABRIELA WAS SAYING IN AI MODULE
 
 
 """ 
@@ -40,7 +36,7 @@ def get_valid_uuid(geo_json_file, img_file):
     geo_j_file = open(geo_json_file)
     tree_annotations = json.load(geo_j_file)
 
-    total_poss = 0  # Number of possible bounding boxes in image
+    total_poss = 0  # Number of possible bounding boxes in image - Maybe just for error checking?
     poss_uuid_list = []  # Empty list to put in uuid numbers of possible bounding boxes in image
 
     # Calculate image coords
@@ -59,7 +55,7 @@ def get_valid_uuid(geo_json_file, img_file):
             if img_right_bounds >= current_bbox[0] >= img_left_bounds and img_top_bounds >= current_bbox[1] >= \
                     img_bottom_bounds:
                 poss_uuid_list.append(uuid_num)  # Appends uuid to list if first coordinates are within bounds
-                total_poss += 1  # Plus 1 the number of possible bounding boxes in image
+                total_poss += 1  # ++ the number of possible bounding boxes in image - Maybe just for error checking?
 
     return poss_uuid_list, tree_annotations
 
@@ -181,6 +177,9 @@ def create_csv(csv_name):
     pd = pandas.DataFrame(not_index_list, columns=columns)
     # Create csv with column headers and no index
     pd.to_csv(csv_name, index=False)
+
+
+# EVERYTHING BELOW IS IN ADDITION TO THE CREATING CSV PROCESS
 
 
 """
