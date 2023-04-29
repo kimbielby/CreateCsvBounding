@@ -3,6 +3,7 @@ import json
 import rasterio as rio
 import pandas
 
+
 """ Global Variables """
 img_left_bounds = 0  # Left boundary of image in geo coordinates
 img_right_bounds = 0  # Right boundary of image in geo coordinates
