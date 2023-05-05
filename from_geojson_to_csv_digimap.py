@@ -16,12 +16,10 @@ for_csv = []  # The list of list for bounding boxes in image
 Main entry point
 Handles all methods 
 """
-def here_we_go(geojson_file, img_filename, new_csv_name):
-    # TODO: Put boolean isDigi so if it comes for digimap, fcode number will be used instead of uuid
-    #             Then do alternate code if boolean is true
-    poss_uuid, tree_annot = get_valid_uuid(geojson_file, img_filename)
-    full_coords_list = get_uuid_coords(poss_uuid, tree_annot)  # Get full geo-coordinates for possible uuid's
-    lists_for_csv(img_filename, full_coords_list)
+def here_we_go(geojson_file, img_filename, new_csv_name, id_name, label):
+    poss_id, tree_annot = get_valid_id(geojson_file, img_filename, id_name)
+    full_coords_list = get_id_coords(poss_id, tree_annot, id_name)  # Get full geo-coordinates for possible uuid's
+    lists_for_csv(img_filename, full_coords_list, id_name, label)
     calc_img_px_coords()
     create_csv(new_csv_name)
 
@@ -35,35 +33,40 @@ Gets a list of uuid's from the geojson file whose bounding boxes geo-coords
     are within those of the image 
 """
 # TODO
-def get_valid_uuid(geo_json_file, img_file):
+def get_valid_id(geo_json_file, img_file, id_name):
     # Open the GeoJSON file and load it with JSON
     geo_j_file = open(geo_json_file)
     tree_annotations = json.load(geo_j_file)
 
     total_poss = 0  # Number of possible bounding boxes in image - Maybe just for error checking?
-    # todo: Change to poss_id_list ?
-    poss_uuid_list = []  # Empty list to put in uuid numbers of possible bounding boxes in image
+    poss_id_list = []  # Empty list to put in uuid numbers of possible bounding boxes in image
 
     # Calculate image coords
     calc_px_per(img_file)
 
     # Check the first x-y coordinate of each uuid to see if it is within bounds
     for i in tree_annotations["features"]:  # Check each bounding box
-        # todo: save either uuid or fcode in a var to use instead of "uuid" ?
-        uuid_num = i["properties"]["uuid"]  # Stores the uuid of the current bounding box object we are in
+        if id_name == "fcode":
+            id_num = i["properties"]["fcode"]
+        else:
+            id_num = i["properties"]["uuid"]
+        # id_num = i["properties"][id_name]  # Stores the uuid of the current bounding box object we are in
         # Holds all the arrays of each vertex in the current bounding box
         coords_array = np.array(i["geometry"]["coordinates"])
 
         if len(coords_array) > 0:  # Make sure the coordinates arrays are not empty
-            current_bbox = coords_array[0][0][0]  # First vertex of the current bounding box
+            if id_name == "fcode":
+                current_bbox = coords_array[0][0]  # First vertex of the current bounding box for Digimap geojson file
+            else:
+                current_bbox = coords_array[0][0][0]  # First vertex of the current bounding box for orig geojson file
 
             # Make sure that the x and y coordinates of the first vertex are within image bounds
             if img_right_bounds >= current_bbox[0] >= img_left_bounds and img_top_bounds >= current_bbox[1] >= \
                     img_bottom_bounds:
-                poss_uuid_list.append(uuid_num)  # Appends uuid to list if first coordinates are within bounds
+                poss_id_list.append(id_num)  # Appends uuid to list if first coordinates are within bounds
                 total_poss += 1  # ++ the number of possible bounding boxes in image - Maybe just for error checking?
 
-    return poss_uuid_list, tree_annotations
+    return poss_id_list, tree_annotations
 
 
 """
@@ -115,14 +118,18 @@ def calc_geo_coords_boundaries(img_file):
 Gets geo-coordinates for each uuid on poss_uuid_list and stores them in 2D List
 """
 # TODO
-def get_uuid_coords(uuid_list, annot_file):
+def get_id_coords(id_list, annot_file, id_name):
     # Go through geojson and get coordinates for each uuid on poss_uuid_list
     full_coords_list = []
-    for i in uuid_list:
+
+    for i in id_list:
         for j in annot_file["features"]:
-            # todo: save either uuid or fcode in a var to use instead of "uuid" ?
-            if i == j["properties"]["uuid"]:
-                full_coords_list.append(j["geometry"]["coordinates"])
+            if id_name == "fcode":
+                if i == j["properties"]["fcode"]:
+                    full_coords_list.append(j["geometry"]["coordinates"])
+            else:
+                if i == j["properties"]["uuid"]:
+                    full_coords_list.append(j["geometry"]["coordinates"])
     return full_coords_list
 
 
@@ -136,20 +143,26 @@ From full_coords_list puts certain coordinates into a separate 2D list as:
     label (e.g. 'tree')
 """
 # TODO
-def lists_for_csv(img_name, coord_list):
+def lists_for_csv(img_name, coord_list, id_name, label):
     # Take certain coords from full_coords_list and put them into a separate list with the following pattern:
     # image_path (name of image); xmin; ymin; xmax; ymax; label (e.g. 'Tree')
     global for_csv  # The list of lists for bounding boxes in image
-    # todo: Pass in the label as a var?
-    label = "Tree"
+
     # TODO: Check if coords are beyond bounds, i.e. not all sides of the bounding box is inside image,
     #               then change the min-max x-y to be image bounds
     for i in coord_list:
-        # Get mins and maxs of bounding box
-        geo_xmin = i[0][0][0][0]
-        geo_ymin = i[0][0][0][1]
-        geo_xmax = i[0][0][2][0]
-        geo_ymax = i[0][0][1][1]
+        if id_name == "fcode":
+            # Get mins and maxs of bounding box
+            geo_xmin = i[0][0][0]
+            geo_ymin = i[0][0][1]
+            geo_xmax = i[0][2][0]
+            geo_ymax = i[0][1][1]
+        else:
+            # Get mins and maxs of bounding box
+            geo_xmin = i[0][0][0][0]
+            geo_ymin = i[0][0][0][1]
+            geo_xmax = i[0][0][2][0]
+            geo_ymax = i[0][0][1][1]
 
         # Put everything in order for line in csv into a list
         temp_list = [img_name, geo_xmin, geo_ymin, geo_xmax, geo_ymax, label]
@@ -181,6 +194,9 @@ def calc_img_px_coords():
 Adds column headers and data from for_csv to a pandas dataframe then saves it as a csv file
 """
 def create_csv(csv_name):
+    # TODO: First check if csv file of same name is already created
+    #               Then if it is, append everything in the not_index_list to it
+    #               Otherwise create as below
     # Column headers to be in csv file
     columns = ["image_path", "xmin", "ymin", "xmax", "ymax", "label"]
     # Everything to be included in csv
