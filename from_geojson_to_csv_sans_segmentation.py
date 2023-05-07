@@ -1,3 +1,4 @@
+import os.path
 import numpy as np
 import json
 import rasterio as rio
@@ -9,6 +10,8 @@ img_left_bounds = 0  # Left boundary of image in geo coordinates
 img_right_bounds = 0  # Right boundary of image in geo coordinates
 img_top_bounds = 0  # Top boundary of image in geo coordinates
 img_bottom_bounds = 0  # Bottom boundary of image in geo coordinates
+img_width_px = 0    # Width of image in pixels
+img_height_px = 0   # Height of image in pixels
 px_per_m = 0  # Number of pixels per metre of geo-coordinates
 for_csv = []  # The list of list for bounding boxes in image
 
@@ -18,7 +21,7 @@ Handles all methods
 """
 def here_we_go(geojson_file, img_filename, new_csv_name, id_name, label):
     poss_id, tree_annot = get_valid_id(geojson_file, img_filename, id_name)
-    full_coords_list = get_id_coords(poss_id, tree_annot, id_name)  # Get full geo-coordinates for possible uuid's
+    full_coords_list = get_id_coords(poss_id, tree_annot, id_name)  # Get full geo-coordinates for possible id's
     lists_for_csv(img_filename, full_coords_list, id_name, label)
     calc_img_px_coords()
     create_csv(new_csv_name)
@@ -29,10 +32,9 @@ def here_we_go(geojson_file, img_filename, new_csv_name, id_name, label):
 
 
 """ 
-Gets a list of uuid's from the geojson file whose bounding boxes geo-coords 
+Gets a list of id's from the geojson file whose bounding boxes geo-coords 
     are within those of the image 
 """
-# TODO
 def get_valid_id(geo_json_file, img_file, id_name):
     # Open the GeoJSON file and load it with JSON
     geo_j_file = open(geo_json_file)
@@ -44,13 +46,13 @@ def get_valid_id(geo_json_file, img_file, id_name):
     # Calculate image coords
     calc_px_per(img_file)
 
-    # Check the first x-y coordinate of each uuid to see if it is within bounds
+    # Check the first x-y coordinate of each id to see if it is within bounds
     for i in tree_annotations["features"]:  # Check each bounding box
         if id_name == "fcode":
             id_num = i["properties"]["fcode"]
         else:
             id_num = i["properties"]["uuid"]
-        # id_num = i["properties"][id_name]  # Stores the uuid of the current bounding box object we are in
+
         # Holds all the arrays of each vertex in the current bounding box
         coords_array = np.array(i["geometry"]["coordinates"])
 
@@ -63,7 +65,7 @@ def get_valid_id(geo_json_file, img_file, id_name):
             # Make sure that the x and y coordinates of the first vertex are within image bounds
             if img_right_bounds >= current_bbox[0] >= img_left_bounds and img_top_bounds >= current_bbox[1] >= \
                     img_bottom_bounds:
-                poss_id_list.append(id_num)  # Appends uuid to list if first coordinates are within bounds
+                poss_id_list.append(id_num)  # Appends id to list if first coordinates are within bounds
                 total_poss += 1  # ++ the number of possible bounding boxes in image - Maybe just for error checking?
 
     return poss_id_list, tree_annotations
@@ -75,6 +77,8 @@ Also calculates pixels per metre
 """
 # TODO
 def calc_px_per(img_file):
+    global img_width_px
+    global img_height_px
     global px_per_m
 
     # Update the global vars with the Geolocation boundaries of image
@@ -115,19 +119,18 @@ def calc_geo_coords_boundaries(img_file):
 
 
 """
-Gets geo-coordinates for each uuid on poss_uuid_list and stores them in 2D List
+Gets geo-coordinates for each id on id_list and stores them in 2D List
 """
-# TODO
 def get_id_coords(id_list, annot_file, id_name):
-    # Go through geojson and get coordinates for each uuid on poss_uuid_list
+    # Go through geojson and get coordinates for each id on id_list
     full_coords_list = []
 
     for i in id_list:
         for j in annot_file["features"]:
-            if id_name == "fcode":
+            if id_name == "fcode":      # If geojson is from Digimap
                 if i == j["properties"]["fcode"]:
                     full_coords_list.append(j["geometry"]["coordinates"])
-            else:
+            else:           # If geojson is original one
                 if i == j["properties"]["uuid"]:
                     full_coords_list.append(j["geometry"]["coordinates"])
     return full_coords_list
@@ -148,8 +151,6 @@ def lists_for_csv(img_name, coord_list, id_name, label):
     # image_path (name of image); xmin; ymin; xmax; ymax; label (e.g. 'Tree')
     global for_csv  # The list of lists for bounding boxes in image
 
-    # TODO: Check if coords are beyond bounds, i.e. not all sides of the bounding box is inside image,
-    #               then change the min-max x-y to be image bounds
     for i in coord_list:
         if id_name == "fcode":
             # Get mins and maxs of bounding box
@@ -186,6 +187,15 @@ def calc_img_px_coords():
         px_xmax = (img_right_bounds - for_csv[i][3]) * px_per_m
         px_ymax = (img_top_bounds - for_csv[i][2]) * px_per_m
 
+        if px_xmin < 0:     # If the left edge of bounding box is past the left edge of the image
+            px_xmin = 0     # Set the xmin value to the left edge of the image (i.e. 0)
+        if px_ymin < 0:     # If the top edge of bounding box is above the top edge of the image
+            px_ymin = 0     # Set the ymin to the top edge of the image (i.e. 0)
+        if px_xmax > img_width_px:      # If the right edge of the bounding box is past the right edge of the image
+            px_xmax = img_width_px      # Set the xmax to the width of the image
+        if px_ymax > img_height_px:     # If the bottom edge of the bounding box is below the bottom edge of the image
+            px_ymax = img_height_px     # Set the ymax to the height of the image
+
         # Now replace items in positions 1 through 4 in the List
         for_csv[i][1:5] = [px_xmin, px_ymin, px_xmax, px_ymax]
 
@@ -193,19 +203,19 @@ def calc_img_px_coords():
 """
 Adds column headers and data from for_csv to a pandas dataframe then saves it as a csv file
 """
-# TODO
 def create_csv(csv_name):
-    # TODO: First check if csv file of same name is already created
-    #               Then if it is, append everything in the not_index_list to it
-    #               Otherwise create as below
-    # Column headers to be in csv file
-    columns = ["image_path", "xmin", "ymin", "xmax", "ymax", "label"]
-    # Everything to be included in csv
-    not_index_list = [i for i in for_csv]
-    # Create pandas dataframe
-    pd = pandas.DataFrame(not_index_list, columns=columns)
-    # Create csv with column headers and no index
-    pd.to_csv(csv_name, index=False)
+    columns = ["image_path", "xmin", "ymin", "xmax", "ymax", "label"]  # Column headers to be in csv file
+    not_index_list = [i for i in for_csv]   # Everything to be included in csv
+
+    # Check if csv file already exists
+    if os.path.exists(csv_name):    # If exists...
+        df1 = pandas.read_csv(csv_name)     # Read csv into Pandas DataFrame - including column headers
+        df2 = pandas.DataFrame(not_index_list, columns=columns)  # Create Pandas DataFrame with new data plus headers
+        pd = df1.merge(df2, how="outer")    # Create new df with rows of second df below those in first df
+        pd.to_csv(csv_name, index=False)  # Create csv from new df with column headers and no index
+    else:   # If does not exist...
+        pd = pandas.DataFrame(not_index_list, columns=columns)  # Create pandas dataframe
+        pd.to_csv(csv_name, index=False)    # Create csv with column headers and no index
 
 
 # EVERYTHING BELOW IS IN ADDITION TO THE CREATING CSV PROCESS
@@ -228,7 +238,6 @@ def get_geo_coords_boundaries(img_file):
     return img_left_bounds, img_right_bounds, img_top_bounds, img_bottom_bounds
 
 
-# TODO
 def check_bboxes_vs_img_geocoords(geo_bbox_list, img_xmin, img_xmax, img_ymin, img_ymax):
 
     # First go through geo_bbox_list to compare max and min - Turn to numpy array?
