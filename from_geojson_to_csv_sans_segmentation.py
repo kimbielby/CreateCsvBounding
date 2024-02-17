@@ -1,3 +1,4 @@
+import copy
 import os.path
 import numpy as np
 import json
@@ -20,16 +21,12 @@ Main entry point
 Handles all methods 
 """
 def here_we_go(geojson_file, img_filename, new_csv_name, id_name, label):
-    poss_id, tree_annot = get_valid_id(geojson_file, img_filename, id_name)
+    geoj_copy = copy.deepcopy(geojson_file)
+    poss_id, tree_annot = get_valid_id(geoj_copy, img_filename, id_name)
     full_coords_list = get_id_coords(poss_id, tree_annot, id_name)  # Get full geo-coordinates for possible id's
     lists_for_csv(img_filename, full_coords_list, id_name, label)
     calc_img_px_coords()
     create_csv(new_csv_name)
-
-
-# TODO: COPY FILES FIRST BEFORE DOING STUFF WITH THEM
-#   - LIKE GABRIELA WAS SAYING IN AI MODULE
-
 
 """ 
 Gets a list of id's from the geojson file whose bounding boxes geo-coords 
