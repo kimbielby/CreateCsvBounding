@@ -213,7 +213,7 @@ def create_csv(csv_name):
         df2 = pandas.DataFrame(not_index_list, columns=columns)  # Create Pandas DataFrame with new data plus headers
         pd = df1.merge(df2, how="outer")    # Create new df with rows of second df below those in first df
         pd.to_csv(csv_name, index=False)  # Create csv from new df with column headers and no index
-    else:   # If does not exist...
+    else:   # If it does not exist...
         pd = pandas.DataFrame(not_index_list, columns=columns)  # Create pandas dataframe
         pd.to_csv(csv_name, index=False)    # Create csv with column headers and no index
 
